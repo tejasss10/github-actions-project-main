@@ -1,16 +1,8 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-name: Java CI with Maven
+name: Java CI/CD Pipeline to Tomcat
 
 on:
   push:
-    branches:[ main ]   # Trigger on push to main branch
+    branches: [ main ]   # Trigger on push to main branch
 
 jobs:
   build:
@@ -50,3 +42,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: myapp
+
+      # 6. Deploy WAR via Tomcat Manager
+      - name: Deploy to Tomcat
+        run: |
+          WAR_FILE=$(ls *.war)
+          echo "Deploying $WAR_FILE to Tomcat..."
+          curl -v --upload-file "$WAR_FILE" \
+            "http://${{ secrets.TOMCAT_USER }}:${{ secrets.TOMCAT_PASSWORD }}@${{ secrets.TOMCAT_HOST }}/manager/text/deploy?path=/myapp&update=true"
